@@ -287,9 +287,13 @@ function shuffle(arr) {
 function renderPracticeCard() {
   const q = state.practiceQueue[state.practiceIndex];
   if (!q) {
-    el.practiceBody.innerHTML = `<p class="practice-empty">That's every question in your bank — nice work. Close this and go again anytime.</p>`;
+    el.practiceBody.innerHTML = `<p class="practice-empty">That's every question in your bank — nice work.</p>`;
+    el.nextBtn.textContent = 'Start over →';
+    el.revealBtn.hidden = true;
     return;
   }
+  el.nextBtn.textContent = 'Next question →';
+  el.revealBtn.hidden = false;
   el.practiceBody.innerHTML = `
     <p class="practice-question">${escapeHtml(q.question)}</p>
     <div class="practice-meta">
@@ -365,7 +369,12 @@ el.revealBtn.addEventListener('click', () => {
   document.getElementById('practiceStar')?.classList.toggle('shown');
 });
 el.nextBtn.addEventListener('click', () => {
-  state.practiceIndex++;
+  if (state.practiceIndex >= state.practiceQueue.length) {
+    state.practiceQueue = shuffle([...state.questions]);
+    state.practiceIndex = 0;
+  } else {
+    state.practiceIndex++;
+  }
   renderPracticeCard();
 });
 
