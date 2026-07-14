@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STAR Bank — Behavioural Interview Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top">
+      <div class="brand">
+        <span class="brand-mark">STAR<span class="brand-mark-accent">_</span>BANK</span>
+        <span class="brand-eyebrow">SELECT * FROM behavioural_questions;</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost" id="exportBtn" title="Export as JSON">Export</button>
+        <button class="btn btn-ghost" id="importBtn" title="Import JSON">Import</button>
+        <input type="file" id="importFile" accept="application/json" hidden>
+        <button class="btn btn-primary" id="newBtn">+ New question</button>
+      </div>
+    </div>
+
+    <div class="stats-row" id="statsRow"></div>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 5L20.5 19l-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></svg>
+        <input type="text" id="searchInput" placeholder="Search questions, situations, results…">
+      </div>
+      <div class="chip-row" id="categoryChips"></div>
+      <div class="select-wrap">
+        <select id="sortSelect">
+          <option value="recent">Recently updated</option>
+          <option value="incomplete">Incomplete first</option>
+          <option value="az">A → Z</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- List -->
+  <main class="main">
+    <div class="list" id="list"></div>
+    <div class="empty-state" id="emptyState" hidden>
+      <p class="empty-title">No records match this query</p>
+      <p class="empty-sub">Adjust your filters, or add a new behavioural question to start building your bank.</p>
+    </div>
+  </main>
+
+  <!-- Practice mode floating button -->
+  <button class="fab" id="practiceBtn" title="Practice mode">
+    <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+    Practice
+  </button>
+</div>
+
+<!-- Editor Modal -->
+<div class="modal-overlay" id="editorOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <span class="modal-eyebrow" id="modalEyebrow">NEW RECORD</span>
+      <button class="icon-btn" id="closeEditor" aria-label="Close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <label class="field-label" for="qQuestion">Question prompt</label>
+      <input type="text" id="qQuestion" class="text-input" placeholder="e.g. Tell me about a time you had to resolve a conflict with a colleague">
+
+      <div class="field-row">
+        <div class="field-col">
+          <label class="field-label" for="qCategory">Category</label>
+          <input type="text" id="qCategory" class="text-input" list="categoryList" placeholder="Leadership, Conflict, Failure…">
+          <datalist id="categoryList"></datalist>
+        </div>
+        <div class="field-col">
+          <label class="field-label" for="qCompany">Used for (optional)</label>
+          <input type="text" id="qCompany" class="text-input" placeholder="e.g. Sydney Trains — Workforce Modelling Lead">
+        </div>
+      </div>
+
+      <div class="star-grid">
+        <div class="star-field" data-key="S">
+          <label class="field-label"><span class="star-tag star-tag-s">S</span> Situation <span class="field-hint">Set the scene — where, when, what was the context?</span></label>
+          <textarea id="qSituation" rows="3" placeholder="e.g. TfNSW had two overlapping crew datasets (opcrew_data and base) with no reconciliation process…"></textarea>
+        </div>
+        <div class="star-field" data-key="T">
+          <label class="field-label"><span class="star-tag star-tag-t">T</span> Task <span class="field-hint">What were you responsible for? What was the goal?</span></label>
+          <textarea id="qTask" rows="3" placeholder="e.g. I needed to identify mismatches and design a repeatable validation process…"></textarea>
+        </div>
+        <div class="star-field" data-key="A">
+          <label class="field-label"><span class="star-tag star-tag-a">A</span> Action <span class="field-hint">What did YOU specifically do? Be concrete and stepwise.</span></label>
+          <textarea id="qAction" rows="4" placeholder="e.g. I built a pydomo-based Jupyter test harness to compare records in-memory without generating output datasets…"></textarea>
+        </div>
+        <div class="star-field" data-key="R">
+          <label class="field-label"><span class="star-tag star-tag-r">R</span> Result <span class="field-hint">What was the measurable outcome? What did you learn?</span></label>
+          <textarea id="qResult" rows="3" placeholder="e.g. Reduced manual reconciliation time by X%, and the harness became the standard for future migrations…"></textarea>
+        </div>
+      </div>
+
+      <label class="field-label" for="qNotes">Delivery notes (optional)</label>
+      <textarea id="qNotes" rows="2" placeholder="Reminders for how to tell it out loud — pacing, what to emphasise, follow-up questions to expect…"></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="deleteBtn" hidden>Delete</button>
+      <div class="footer-spacer"></div>
+      <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveBtn">Save record</button>
+    </div>
+  </div>
+</div>
+
+<!-- Practice Modal -->
+<div class="modal-overlay" id="practiceOverlay" hidden>
+  <div class="modal modal-practice" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <span class="modal-eyebrow">PRACTICE MODE</span>
+      <button class="icon-btn" id="closePractice" aria-label="Close">✕</button>
+    </div>
+    <div class="practice-body" id="practiceBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="revealBtn">Reveal STAR</button>
+      <div class="footer-spacer"></div>
+      <button class="btn btn-primary" id="nextBtn">Next question →</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
